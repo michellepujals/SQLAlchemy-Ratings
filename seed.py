@@ -47,7 +47,7 @@ def load_movies():
         row = row.rstrip()
         row = row.split("|")
         movie_id, title, released_at, imdb_url = row[0], row[1], row[2], row[4]
-        title = title[:-6]
+        title = title[:-6].rstrip()
         # Used for decoding special characters like accent marks
         # title = title.decode("latin-1")
         if released_at:
