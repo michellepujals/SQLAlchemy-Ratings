@@ -1,13 +1,10 @@
 """Utility file to seed ratings database from MovieLens data in seed_data/"""
-
-from sqlalchemy import func
-from model import User, Rating, Movie
-# from model import Rating
-# from model import Movie
-
-from model import connect_to_db, db
-from server import app
 import datetime
+from sqlalchemy import func
+
+from model import User, Rating, Movie, connect_to_db, db
+from server import app
+
 
 def load_users():
     """Load users from u.user into database."""
@@ -30,6 +27,11 @@ def load_users():
         # We need to add to the session or it won't ever be stored
         db.session.add(user)
 
+        # This is to provide a sense of progress--> need to use i in for loop
+        # and enumerate():
+        # if i % 100 == 0:
+        #     print(i)
+
     # Once we're done, we should commit our work
     db.session.commit()
 
@@ -46,6 +48,8 @@ def load_movies():
         row = row.split("|")
         movie_id, title, released_at, imdb_url = row[0], row[1], row[2], row[4]
         title = title[:-6]
+        # Used for decoding special characters like accent marks
+        # title = title.decode("latin-1")
         if released_at:
             released_at = datetime.datetime.strptime(released_at, "%d-%b-%Y")
         else:
@@ -59,6 +63,7 @@ def load_movies():
         db.session.add(movie)
 
     db.session.commit()
+
 
 def load_ratings():
     """Load ratings from u.data into database."""
