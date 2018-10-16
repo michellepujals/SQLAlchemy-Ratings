@@ -35,11 +35,19 @@ def user_list():
 @app.route("/register", methods=["GET"])
 def register_form():
     """User Registration."""
-    
-    email = request.args.get("email")
-    password = request.args.get("password")
-    age = request.args.get("age")
-    zipcode = request.args.get("zipcode")
+
+
+    return render_template("register_form.html")
+
+
+
+@app.route("/register", methods=["POST"])
+def register_process():
+
+    email = request.form.get("email")
+    password = request.form.get("password")
+    age = request.form.get("age")
+    zipcode = request.form.get("zipcode")
 
     user = User(email=email, password=password,
                  age=age, zipcode=zipcode)
@@ -48,10 +56,25 @@ def register_form():
     db.session.commit()
 
 
-    return render_template("register_form.html", email=email, password=password,
-                            age=age, zipcode=zipcode)
+    return redirect('/')
 
 
+@app.route("/login")
+def user_login():
+    """Allow user to login using email and password."""
+
+    email = request.form.get("email")
+    password = request.form.get("password")
+    user = User.query.filter_by(email=email).first()
+    if user.password == password:
+        session['user'] = user.user_id
+        flash("You are now logged in.")
+
+    else:
+        flash("Incorrect login information. Please try again.")
+        return redirect("/login")
+
+    return render_template("login.html", email=email, password=password)
 
 
 if __name__ == "__main__":
