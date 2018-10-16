@@ -32,6 +32,18 @@ def user_list():
     users = User.query.all()
     return render_template("user_list.html", users=users)
 
+@app.route("/users/<user_id>")
+def show_user_details(user_id):
+    """Show user's age, zipcode, list of movies and ratings."""
+
+    user = User.query.get(user_id)
+    age = user.age
+    zipcode = user.zipcode
+    movies_and_ratings = user.ratings
+
+    return render_template("user_details.html", user=user, age=age,
+                            zipcode=zipcode, movies_and_ratings=movies_and_ratings)
+
 
 @app.route("/register", methods=["GET"])
 def register_form():
@@ -78,8 +90,9 @@ def check_login_credentials():
     if (user.password and user.email):
         if user.password == password:
             session['user'] = user.user_id
+            user_id_string = str(user.user_id)
             flash("You are now logged in.")
-            return redirect("/")
+            return redirect("/users/"+user_id_string)
         else:
             flash("Incorrect login information. Please try again.")
             return redirect("/login")
