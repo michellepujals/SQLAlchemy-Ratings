@@ -7,8 +7,11 @@
 <body>
   Ratings
   <hr>
-  {% if session.get('user') %}
+  {% if session.get('user') != None %}
       Hi {{ session['user'] }}!
+  	<form action="/logout">
+	<input type="submit" value="logout">
+	</form>
   {% endif %}
 
   {% with messages = get_flashed_messages() %}

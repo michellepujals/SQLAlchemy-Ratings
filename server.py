@@ -22,6 +22,7 @@ app.jinja_env.undefined = StrictUndefined
 @app.route('/')
 def index():
     """Homepage."""
+   
     return render_template("homepage.html")
 
 @app.route("/users")
@@ -58,24 +59,41 @@ def register_process():
 
     return redirect('/')
 
-
-@app.route("/login")
+@app.route("/login", methods =['GET'])
 def user_login():
-    """Allow user to login using email and password."""
+    """Display login page."""
+
+    return render_template("login.html")
+
+
+
+@app.route("/login", methods =['POST'])
+def check_login_credentials():
+    """Check user email and password against the database, login user."""
 
     email = request.form.get("email")
     password = request.form.get("password")
     user = User.query.filter_by(email=email).first()
-    if user.password == password:
-        session['user'] = user.user_id
-        flash("You are now logged in.")
+    
+    if (user.password and user.email):
+        if user.password == password:
+            session['user'] = user.user_id
+            flash("You are now logged in.")
+            return redirect("/")
+        else:
+            flash("Incorrect login information. Please try again.")
+            return redirect("/login")
 
-    else:
-        flash("Incorrect login information. Please try again.")
-        return redirect("/login")
+    return render_template("login.html", email=email, password=password, user=user)
 
-    return render_template("login.html", email=email, password=password)
+@app.route("/logout")
+def logout_user():
+    """Allow user to logout."""
 
+    session['user'] = None
+    flash("You are now logged out.")
+
+    return redirect("/")
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the
