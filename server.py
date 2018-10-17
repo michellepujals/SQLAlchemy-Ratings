@@ -63,23 +63,29 @@ def show_movie_details(title):
     released_at = movie.released_at
     imdb_url = movie.imdb_url
     list_of_ratings = movie.ratings
+    hidden_movie_id = movie_id
 
     return render_template("movie_details.html", movie=movie, title=title,
                             released_at=released_at, imdb_url=imdb_url,
-                            list_of_ratings=list_of_ratings, new_score=new_score)
+                            list_of_ratings=list_of_ratings, 
+                            hidden_movie_id=hidden_movie_id)
 
 
-@app.route("/add_new_rating")
+@app.route("/add_new_rating", methods=["POST"])
 def add_new_rating():
     """ Add user's new rating."""
-
+    user_id = session['user']
+    hidden_movie_id = request.form.get("hidden_movie_id")
     new_score = request.form.get("new_score")
-    new_rating = Rating(movie_id=movie_id, user_id=user_id,
+    new_rating = Rating(movie_id=hidden_movie_id, user_id=user_id,
                         score=new_score)
+
     db.session.add(new_rating)
     db.session.commit()
 
-    return redirect('/movies/<title>')
+    title = new_rating.movie.title
+
+    return redirect('/movies/'+title)
 
 
 
