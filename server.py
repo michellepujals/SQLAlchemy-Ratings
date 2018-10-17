@@ -77,15 +77,29 @@ def add_new_rating():
     user_id = session['user']
     hidden_movie_id = request.form.get("hidden_movie_id")
     new_score = request.form.get("new_score")
-    new_rating = Rating(movie_id=hidden_movie_id, user_id=user_id,
+    
+    current_user = User.query.filter_by(user_id=user_id).first()
+    existing_rating = Rating.query.filter_by(user_id=user_id, movie_id=hidden_movie_id).first()
+
+    if existing_rating:
+       
+        existing_rating.score = new_score
+        db.session.commit()
+        title = existing_rating.movie.title
+
+        return redirect('/movies/'+title)
+   
+    else:
+        
+        new_rating = Rating(movie_id=hidden_movie_id, user_id=user_id,
                         score=new_score)
+        
+        db.session.add(new_rating)
+        db.session.commit()
 
-    db.session.add(new_rating)
-    db.session.commit()
+        title = new_rating.movie.title
 
-    title = new_rating.movie.title
-
-    return redirect('/movies/'+title)
+        return redirect('/movies/'+title)
 
 
 
