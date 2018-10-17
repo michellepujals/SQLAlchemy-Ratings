@@ -45,6 +45,44 @@ def show_user_details(user_id):
                             zipcode=zipcode, movies_and_ratings=movies_and_ratings)
 
 
+@app.route("/movies")
+def movie_list():
+    """Show list of movies."""
+
+    movies = Movie.query.order_by("title").all()
+
+    return render_template("movie_list.html", movies=movies)
+
+@app.route("/movies/<title>")
+def show_movie_details(title):
+    """Show info about a movie, including its list of ratings."""
+
+    movie_object = Movie.query.filter_by(title=title).first()
+    movie_id = movie_object.movie_id
+    movie = Movie.query.get(movie_id)
+    released_at = movie.released_at
+    imdb_url = movie.imdb_url
+    list_of_ratings = movie.ratings
+
+    return render_template("movie_details.html", movie=movie, title=title,
+                            released_at=released_at, imdb_url=imdb_url,
+                            list_of_ratings=list_of_ratings, new_score=new_score)
+
+
+@app.route("/add_new_rating")
+def add_new_rating():
+    """ Add user's new rating."""
+
+    new_score = request.form.get("new_score")
+    new_rating = Rating(movie_id=movie_id, user_id=user_id,
+                        score=new_score)
+    db.session.add(new_rating)
+    db.session.commit()
+
+    return redirect('/movies/<title>')
+
+
+
 @app.route("/register", methods=["GET"])
 def register_form():
     """User Registration."""
