@@ -56,18 +56,48 @@ def movie_list():
 @app.route("/movies/<title>")
 def show_movie_details(title):
     """Show info about a movie, including its list of ratings."""
-
+    
+    user_id = session['user']
     movie_object = Movie.query.filter_by(title=title).first()#instantiate a movie object
     movie_id = movie_object.movie_id  # get movie_id(PK) from the movie object
     movie = Movie.query.get(movie_id) # query the database to get a movie object using PK
     released_at = movie.released_at 
     imdb_url = movie.imdb_url
-    list_of_ratings = movie.ratings # list of Rating objects for that specific movie
+
+    # Get user's rating for this movie (if it exists)
+    prediction = None
+
+    if user_id:
+        user_rating = Rating.query.filter_by(
+            movie_id=movie_id, user_id=user_id).first()
+        if not user_rating:
+            user = User.query.get(user_id)
+            prediction = user.predict_rating(movie)
+
+    else:
+        user_rating = None
+
+    # Get average rating of movie
+
+    rating_scores = [r.score for r in movie.ratings]
+    avg_rating = float(sum(rating_scores)) / len(rating_scores)
+
+    # prediction = None
+
+    # Prediction code: only predict if the user hasn't rated it.
+
+    # if (not user_rating) and user_id:
+    #     user = User.query.get(user_id)
+    #     if user:
+            # prediction = user.predict_rating(movie)
+
 
     return render_template("movie_details.html", movie=movie, title=title,
                             released_at=released_at, imdb_url=imdb_url,
-                            list_of_ratings=list_of_ratings, 
-                            hidden_movie_id=movie_id)
+                            list_of_ratings=movie.ratings, 
+                            hidden_movie_id=movie_id, user_rating=user_rating,
+                            average=avg_rating,
+                            prediction=prediction)
 
 
 @app.route("/add_new_rating", methods=["POST"])
@@ -79,6 +109,13 @@ def add_new_rating():
     
     current_user = User.query.filter_by(user_id=user_id).first() #queries db to get current user object
     rating = Rating.query.filter_by(user_id=user_id, movie_id=hidden_movie_id).first() #list of Ratings objects
+
+    if user_id:
+        user_rating = Rating.query.filter_by(
+            movie_id=movie_id, user_id=user_id).first()
+
+    else:
+        user_rating = None
 
     if rating: #if the rating already exists
        
