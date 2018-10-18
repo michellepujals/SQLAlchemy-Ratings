@@ -57,49 +57,45 @@ def movie_list():
 def show_movie_details(title):
     """Show info about a movie, including its list of ratings."""
 
-    movie_object = Movie.query.filter_by(title=title).first()
-    movie_id = movie_object.movie_id
-    movie = Movie.query.get(movie_id)
-    released_at = movie.released_at
+    movie_object = Movie.query.filter_by(title=title).first()#instantiate a movie object
+    movie_id = movie_object.movie_id  # get movie_id(PK) from the movie object
+    movie = Movie.query.get(movie_id) # query the database to get a movie object using PK
+    released_at = movie.released_at 
     imdb_url = movie.imdb_url
-    list_of_ratings = movie.ratings
-    hidden_movie_id = movie_id
+    list_of_ratings = movie.ratings # list of Rating objects for that specific movie
 
     return render_template("movie_details.html", movie=movie, title=title,
                             released_at=released_at, imdb_url=imdb_url,
                             list_of_ratings=list_of_ratings, 
-                            hidden_movie_id=hidden_movie_id)
+                            hidden_movie_id=movie_id)
 
 
 @app.route("/add_new_rating", methods=["POST"])
 def add_new_rating():
     """ Add user's new rating."""
     user_id = session['user']
-    hidden_movie_id = request.form.get("hidden_movie_id")
-    new_score = request.form.get("new_score")
+    hidden_movie_id = request.form.get("hidden_movie_id") #gets from the Jinja template/form
+    new_score = request.form.get("new_score") #gets from the Jinja template/form
     
-    current_user = User.query.filter_by(user_id=user_id).first()
-    existing_rating = Rating.query.filter_by(user_id=user_id, movie_id=hidden_movie_id).first()
+    current_user = User.query.filter_by(user_id=user_id).first() #queries db to get current user object
+    rating = Rating.query.filter_by(user_id=user_id, movie_id=hidden_movie_id).first() #list of Ratings objects
 
-    if existing_rating:
+    if rating: #if the rating already exists
        
-        existing_rating.score = new_score
-        db.session.commit()
-        title = existing_rating.movie.title
-
-        return redirect('/movies/'+title)
+        rating.score = new_score #then we update it
    
     else:
         
-        new_rating = Rating(movie_id=hidden_movie_id, user_id=user_id,
+        rating = Rating(movie_id=hidden_movie_id, user_id=user_id,
                         score=new_score)
-        
-        db.session.add(new_rating)
-        db.session.commit()
+    
+        db.session.add(rating) #if it does not exist, we add it as a new Rating object
 
-        title = new_rating.movie.title
+    db.session.commit()
 
-        return redirect('/movies/'+title)
+    title = rating.movie.title
+
+    return redirect(f'/movies/{title}')
 
 
 
@@ -143,14 +139,14 @@ def check_login_credentials():
 
     email = request.form.get("email")
     password = request.form.get("password")
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(email=email).first() #queries the db for the User object
     
-    if (user.password and user.email):
-        if user.password == password:
-            session['user'] = user.user_id
-            user_id_string = str(user.user_id)
+    if (user.password and user.email): #if the user already has an email and password
+        if user.password == password: #check if the password is the same
+            session['user'] = user.user_id #adds user to the session
+            user_id_string = str(user.user_id) 
             flash("You are now logged in.")
-            return redirect("/users/"+user_id_string)
+            return redirect(f"/users/{user_id_string}")
         else:
             flash("Incorrect login information. Please try again.")
             return redirect("/login")
@@ -161,7 +157,7 @@ def check_login_credentials():
 def logout_user():
     """Allow user to logout."""
 
-    session['user'] = None
+    session['user'] = None #clears the user's data from the session
     flash("You are now logged out.")
 
     return redirect("/")
